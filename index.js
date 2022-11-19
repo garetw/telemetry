@@ -162,15 +162,16 @@ const auth = async (username = USERNAME, password = PASSWORD, org = ORG) => {
   }
 }
 
-const point = (measurement, fields, tags) => {
-  const point = new Point(measurement)
+const point = (measurement, fields, tags, timestamp) => {
+  const p = new Point(measurement)
   Object.entries(fields).forEach(([key, value]) => {
-    point.floatField(key, value)
+    p.floatField(key, value)
   })
   Object.entries({ ...DEFAULT_TAGS, ...tags }).forEach(([key, value]) => {
-    point.tag(key, value)
+    p.tag(key, value)
   })
-  return point
+  p.timestamp(timestamp)
+  return p
 }
 
 // handles writeapi actions for clean writes and
@@ -216,11 +217,11 @@ const write = {
   },
 }
 
-// query function
+// future query function
 const query = async (q) => {}
 
 // potentially-useful transformations
-const x = () => {
+const xfrm = () => {
   return {
     // given an object, return an array of objects
     // where each object is sorted by value, string || number
@@ -249,4 +250,4 @@ const logout = async () => {
   }
 }
 
-export { connect, init, auth, point, query, write, logout }
+export { connect, init, auth, point, query, write, logout, xfrm }

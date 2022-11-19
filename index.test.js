@@ -58,7 +58,8 @@ context('telemetry', () => {
       },
       {
         gpu: 'nvidia',
-      }
+      },
+      new Date()
     )
   })
 
