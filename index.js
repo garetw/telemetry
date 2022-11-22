@@ -1,6 +1,5 @@
-// import * from @influxdata/influxdb-client using es6 syntax
 import { HttpError, InfluxDB, Point } from '@influxdata/influxdb-client'
-// import * from @influxdata/influxdb-client-apis using es6 syntax
+
 import {
   AuthorizationsAPI,
   PingAPI,
@@ -10,7 +9,7 @@ import {
   SignoutAPI,
 } from '@influxdata/influxdb-client-apis'
 
-// environment variables
+// environment variables will override if not provided
 const USERNAME = process.env.INFLUXDB_USERNAME || 'development'
 const PASSWORD = process.env.INFLUXDB_PASSWORD || 'development'
 const ORG = process.env.INFLUXDB_ORG || 'development'
@@ -43,6 +42,8 @@ const connect = async (cxn) => {
   }
 }
 
+// initialize an influxdb database
+// bail if it already exists
 const init = async (config) => {
   try {
     let setup = new SetupAPI(client)
@@ -98,6 +99,10 @@ const signin = async (username = USERNAME, password = PASSWORD) => {
   }
 }
 
+// auth function to sign in using a username and password
+// and retrieve a token from the auth api endpoint
+// checks for existing token and deletes it, then creates a new one
+// checks organization, and applies authorization to the organization/bucket
 const auth = async (username = USERNAME, password = PASSWORD, org = ORG) => {
   try {
     let tokenname = 'telemetry-api'
@@ -162,8 +167,10 @@ const auth = async (username = USERNAME, password = PASSWORD, org = ORG) => {
   }
 }
 
+// create a point to write to influxdb
+// takes a measurement, fields: {}, tags: {}, and a timestamp
 const point = (measurement, fields, tags, timestamp) => {
-  const p = new Point(measurement)
+  let p = new Point(measurement, fields, tags)
   Object.entries(fields).forEach(([key, value]) => {
     p.floatField(key, value)
   })
@@ -176,6 +183,7 @@ const point = (measurement, fields, tags, timestamp) => {
 
 // handles writeapi actions for clean writes and
 // cleaning out of buffer/queue on exit
+// the writeapi requires initialization with a bucket and org
 const write = {
   init: async (org, bucket) => {
     try {
@@ -188,7 +196,7 @@ const write = {
   },
   point: async (p) => {
     try {
-      writeApi.writePoint(p)
+      return writeApi.writePoint(p)
     } catch (error) {
       log(error.toString())
     }
@@ -217,11 +225,11 @@ const write = {
   },
 }
 
-// future query function
+// query function
 const query = async (q) => {}
 
 // potentially-useful transformations
-const xfrm = () => {
+const transform = () => {
   return {
     // given an object, return an array of objects
     // where each object is sorted by value, string || number
@@ -235,7 +243,7 @@ const xfrm = () => {
           num[key] = value
         }
       })
-      return [str, num]
+      return [num, str]
     },
   }
 }
@@ -250,4 +258,4 @@ const logout = async () => {
   }
 }
 
-export { connect, init, auth, point, query, write, logout, xfrm }
+export { connect, init, auth, point, query, write, logout, transform }
